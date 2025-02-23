@@ -11,7 +11,7 @@ public class TelaJogo extends JPanel implements ActionListener {
 
     private static final int LARGURA_TELA = 1300;
     private static final int ALTURA_TELA = 750;
-    private static final int TAMANHO_BLOCO = 50;
+    private static final int TAMANHO_BLOCO = 35;
     private static final int UNIDADES = LARGURA_TELA * ALTURA_TELA / (TAMANHO_BLOCO * TAMANHO_BLOCO);
     private static final int INTERVALO = 200;
     private static final String NOME_FONTE = "Ink Free";
@@ -30,6 +30,8 @@ public class TelaJogo extends JPanel implements ActionListener {
     private boolean estaPausado = false;
     private int velocidadeAtual = INTERVALO;
     private Image imagemDeFundo;
+    private Image imagemDeMaca;
+
     Timer timer;
     Random random;
 
@@ -40,15 +42,23 @@ public class TelaJogo extends JPanel implements ActionListener {
         setFocusable(true);
         addKeyListener(new KeyReaderAdapter());
         carregarImagemDeFundo();
+        carregarImagemDeMaca();
         carregarSons();
         iniciarJogo();
     }
-
+    //imagem fundo 
     private void carregarImagemDeFundo() {
         ImageIcon icone = new ImageIcon("main/img/fundo.jpg");
         imagemDeFundo = icone.getImage();
     }
-
+    // imagem apple
+    private void carregarImagemDeMaca() {
+        ImageIcon iconeMaca = new ImageIcon("main/img/apple.png");
+        imagemDeMaca = iconeMaca.getImage();
+    }
+    
+    
+    // carregar som
     private void carregarSons() {
         somFundo = SomUtils.carregarSom("main/sons/som_fundo.wav");
         somComer = SomUtils.carregarSom("main/sons/som_alimento.wav");
@@ -106,22 +116,26 @@ public class TelaJogo extends JPanel implements ActionListener {
             g.drawImage(imagemDeFundo, 0, 0, LARGURA_TELA, ALTURA_TELA, this);
         }
     }
-
     public void desenharTela(Graphics g) {
         if (estaRodando) {
-            g.setColor(Color.red);
-            g.fillOval(blocoX, blocoY, TAMANHO_BLOCO, TAMANHO_BLOCO);
+            if (imagemDeMaca != null) {
+                
+                // g.drawImage(imagemDeMaca, blocoX, blocoY, TAMANHO_BLOCO , TAMANHO_BLOCO,this);
+                
+                g.drawImage(imagemDeMaca, blocoX, blocoY, TAMANHO_BLOCO * 2, TAMANHO_BLOCO * 2, this);
 
+            }
+    
             for (int i = 0; i < corpoCobra; i++) {
                 if (i == 0) {
                     g.setColor(Color.green);
-                    g.fillRect(eixoX[0], eixoY[0], TAMANHO_BLOCO, TAMANHO_BLOCO);
+                    g.fillRect(eixoX[i], eixoY[i], TAMANHO_BLOCO, TAMANHO_BLOCO);
                 } else {
                     g.setColor(new Color(45, 180, 0));
                     g.fillRect(eixoX[i], eixoY[i], TAMANHO_BLOCO, TAMANHO_BLOCO);
                 }
             }
-
+    
             g.setColor(Color.red);
             g.setFont(new Font(NOME_FONTE, Font.BOLD, 40));
             FontMetrics metrics = getFontMetrics(g.getFont());
@@ -129,25 +143,34 @@ public class TelaJogo extends JPanel implements ActionListener {
         } else {
             fimDeJogo(g);
         }
+        
     }
+    
+    
 /*
  * MATHEUS
  */
-    private void criarBloco() {
-        blocoX = random.nextInt(LARGURA_TELA / TAMANHO_BLOCO) * TAMANHO_BLOCO;
-        blocoY = random.nextInt(ALTURA_TELA / TAMANHO_BLOCO) * TAMANHO_BLOCO;
-    }
+private void criarBloco() {
+    blocoX = random.nextInt(LARGURA_TELA / TAMANHO_BLOCO) * TAMANHO_BLOCO;
+    blocoY = random.nextInt(ALTURA_TELA / TAMANHO_BLOCO) * TAMANHO_BLOCO;
+}
 
-    public void fimDeJogo(Graphics g) {
-        SomUtils.pararSom(somFundo);
-        SomUtils.tocarSom(somMorrer);
-        g.setColor(Color.red);
-        g.setFont(new Font(NOME_FONTE, Font.BOLD, 40));
-        FontMetrics fontePontuacao = getFontMetrics(g.getFont());
-        g.drawString("Pontos: " + blocosComidos, (LARGURA_TELA - fontePontuacao.stringWidth("Pontos: " + blocosComidos)) / 2, g.getFont().getSize());
 
+
+public void fimDeJogo(Graphics g) {
+    SomUtils.pararSom(somFundo);
+    SomUtils.tocarSom(somMorrer);
+
+    g.setColor(Color.red);
+    g.setFont(new Font(NOME_FONTE, Font.BOLD, 40));
+    FontMetrics fontePontuacao = getFontMetrics(g.getFont());
+    g.drawString("Pontos: " + blocosComidos, 
+        (LARGURA_TELA - fontePontuacao.stringWidth("Pontos: " + blocosComidos)) / 2, 
+        g.getFont().getSize());
+
+    SwingUtilities.invokeLater(() -> { 
         int resposta = JOptionPane.showOptionDialog(
-            this,
+            SwingUtilities.getWindowAncestor(this), // Centraliza na janela do jogo
             "Você perdeu! Deseja jogar novamente?",
             "Fim de Jogo",
             JOptionPane.YES_NO_OPTION,
@@ -162,7 +185,8 @@ public class TelaJogo extends JPanel implements ActionListener {
         } else {
             System.exit(0);
         }
-    }
+    });
+}
 
 
     public void actionPerformed(ActionEvent e) {
@@ -199,19 +223,23 @@ public class TelaJogo extends JPanel implements ActionListener {
     }
 
     private void alcancarBloco() {
-        if (eixoX[0] == blocoX && eixoY[0] == blocoY) {
+        // Verifica a colisão considerando que a maçã tem o dobro do tamanho
+        if (Math.abs(eixoX[0] - blocoX) < TAMANHO_BLOCO * 2 && Math.abs(eixoY[0] - blocoY) < TAMANHO_BLOCO * 2) {
             corpoCobra++;
             blocosComidos++;
             SomUtils.tocarSom(somComer);
             criarBloco();
-            // Aumentar a velocidade da cobra
-            if (velocidadeAtual > 50) { // Limite mínimo para a velocidade
+        
+            if (velocidadeAtual > 50) {
                 velocidadeAtual -= 5;
                 timer.setDelay(velocidadeAtual);
             }
         }
     }
 
+    
+    
+    
     private void validarLimites() {
         //A cabeça bateu no corpo?
         for (int i = corpoCobra; i > 0; i--) {
@@ -236,47 +264,42 @@ public class TelaJogo extends JPanel implements ActionListener {
         }
     }
 
-
-
-    public class KeyReaderAdapter extends KeyAdapter {
-        @Override
-        public void keyPressed(KeyEvent e) {
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT:
-                    if (direcao != 'D') {
-                        direcao = 'E';
-                    }
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    if (direcao != 'E') {
-                        direcao = 'D';
-                    }
-                    break;
-                case KeyEvent.VK_UP:
-                    if (direcao != 'B') {
-                        direcao = 'C';
-                    }
-                    break;
-                case KeyEvent.VK_DOWN:
-                    if (direcao != 'C') {
-                        direcao = 'B';
-                    }
-                    break;
-                case KeyEvent.VK_ESCAPE:
-                    estaPausado = !estaPausado;
-                    if (estaPausado) {
-                        timer.stop();
-                        SomUtils.pausarSom(somFundo);
-                        SomUtils.somDePause(somDePause);
-                        
-                    } else {
+public class KeyReaderAdapter extends KeyAdapter {
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT:if (direcao != 'D') { // Impede que a cobra vá para a direita quando já está indo para a esquerda
+                    direcao = 'E';
+                }
+                break;
+            case KeyEvent.VK_RIGHT:if (direcao != 'E') { // Impede que a cobra vá para a esquerda quando já está indo para a direita
+                    direcao = 'D';
+                }
+                break;
+            case KeyEvent.VK_UP:
+                if (direcao != 'B') { // Impede que a cobra vá para baixo quando já está indo para cima
+                    direcao = 'C';
+                }
+                break;
+            case KeyEvent.VK_DOWN:
+                if (direcao != 'C') { // Impede que a cobra vá para cima quando já está indo para baixo
+                    direcao = 'B';
+                }
+                break;
+            case KeyEvent.VK_ESCAPE:
+                estaPausado = !estaPausado;
+                if (estaPausado) {
+                    timer.stop();
+                    SomUtils.pausarSom(somFundo);
+                    SomUtils.somDePause(somDePause);
+                } else {
                     timer.start();
                     SomUtils.continuarSom(somFundo);
                     SomUtils.somDePauseParado(somDePause);
                 }
                 repaint();
                 break;
-            }
         }
     }
+}
 }
