@@ -43,9 +43,11 @@ public class TelaJogo extends JPanel implements ActionListener {
         addKeyListener(new KeyReaderAdapter());
         carregarImagemDeFundo();
         carregarImagemDeMaca();
+        
         carregarSons();
         iniciarJogo();
     }
+    
     //imagem fundo 
     private void carregarImagemDeFundo() {
         ImageIcon icone = new ImageIcon("main/img/fundo.jpg");

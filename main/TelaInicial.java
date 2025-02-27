@@ -10,6 +10,8 @@ public class TelaInicial extends JFrame {
     private Image imagemDeFundo; 
 
     public TelaInicial() { 
+        imagemDeFundo = new ImageIcon("main/img/snake.jpg").getImage(); // Carrega a imagem de fundo
+        
         setTitle("Jogo da Cobrinha - Snake Game"); 
         setSize(1300, 750); 
         setDefaultCloseOperation(EXIT_ON_CLOSE); 
@@ -27,6 +29,7 @@ public class TelaInicial extends JFrame {
                 }
             }
         };
+        
         painelFundo.setLayout(new BorderLayout()); // Define o layout do painel de fundo como BorderLayout
 
         // Criação do título
